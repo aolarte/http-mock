@@ -7,15 +7,6 @@ if (process.env.SD_TRACE === 'true') {
   })
 }
 
-if (process.env.SD_DEBUG === 'true') {
-  require('@google-cloud/debug-agent').start({
-    allowExpressions: true,
-    serviceContext: {
-      service: process.env.SERVICE_NAME || 'default service',
-      version: process.env.SERVICE_VERSION || 'def'
-    }
-  })
-}
 
 const express = require('express')
 const bodyParser = require('body-parser')
