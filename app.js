@@ -43,14 +43,15 @@ function toArray (value) {
   return [value]
 }
 
-const data = new Map()
+const routes = {}
+const config = {routes:routes}
 
 function fetchOrCreate (path) {
-  if (data.has(path)) {
-    return data.get(path)
+  if (routes.hasOwnProperty(path)) {
+    return routes[path]
   }
   const pathData = {}
-  data.set(path, pathData)
+  routes[path]=pathData  
   return pathData
 }
 
@@ -98,13 +99,13 @@ function processRequest (pathData, req, res) {
 }
 
 function processGet (path, req, res) {
-  const pathData = data.get(path)
+  const pathData = routes[path]
   setTimeout(() => processRequest(pathData, req, res), (pathData.delay || 0))
 }
 
 function processPatch (path, req, res) {
-  if (data.has(path)) {
-    const pathData = data.get(path)
+  if (routes.hasOwnProperty(path)) {
+    const pathData = routes[path]
     const updatedData = Object.assign(pathData, req.body)
     if (req.accepts('json')) {
       res.send(updatedData)
@@ -169,11 +170,13 @@ if ('error-rate' in argv) {
     const parts = splitArg(value)
     const pathData = fetchOrCreate(parts[0])
     pathData.errorRate = parts[1]
-    console.info(`Add error rate for route: ${value}`)
+    console.info(`Add error rate for route: ${value}`)  
   })
 }
 
-data.forEach((value, key) => {
+console.log("Config: %s", JSON.stringify(config, null, 4));
+
+for (const [key, value] of Object.entries(routes)) {
   console.info(`Registering route: ${key}`)
   router.get(key, function (req, res) {
     processGet(key, req, res)
@@ -182,7 +185,7 @@ data.forEach((value, key) => {
   router.patch(key, function (req, res) {
     processPatch(key, req, res)
   })
-})
+}
 
 app.disable('x-powered-by')
 app.use(function (req, res, next) {
