@@ -28,6 +28,7 @@ Or
 * `--error=/fail:bad` Listen on `/fail` and return a 503 error with text `bad`
 * `--delay=/hello:1000` Delay responses to `/hello/` by 1 second.
 * `--error-rate=/hello:30` Return an error (500) 30% of the times `/hello/` is invoked.
+* `--auth=GCP_ID` Use a GCP ID Token when calling proxy target URL. Requires the code to find the GCP credentials. User credentials are not supported, only Metadata Server or GCP Service Account file set via `GOOGLE_APPLICATION_CREDENTIALS` (insecure). 
 
 ## Developing
 

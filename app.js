@@ -7,17 +7,16 @@ if (process.env.SD_TRACE === 'true') {
   })
 }
 
-
 const express = require('express')
 const bodyParser = require('body-parser')
 const promMid = require('express-prometheus-middleware')
 const fetch = require('node-fetch')
-const prom_client = require('prom-client')
-const package = require('./package.json');
+const promClient = require('prom-client')
+const pkg = require('./package.json')
+const { GoogleAuth } = require('google-auth-library')
+// const { google } = require('googleapis');
 
-
-
-const version = package.version
+const version = pkg.version
 const tag = process.env.TAG || 'No Tag'
 const port = process.env.PORT || 8080
 
@@ -28,13 +27,12 @@ console.dir(argv)
 console.log('Started with env:')
 console.dir(process.env)
 
-
-const version_gauge = new prom_client.Gauge({
-    name: 'http_mock_version',
-    help: 'Server Version',
-    labelNames: ['version'],
-  })
-version_gauge.labels(version).set(1);
+const versionGauge = new promClient.Gauge({
+  name: 'http_mock_version',
+  help: 'Server Version',
+  labelNames: ['version']
+})
+versionGauge.labels(version).set(1)
 
 const app = express()
 
@@ -48,14 +46,14 @@ function toArray (value) {
 }
 
 const routes = {}
-const config = {routes:routes}
+const config = { routes: routes }
 
 function fetchOrCreate (path) {
-  if (routes.hasOwnProperty(path)) {
+  if (Object.prototype.hasOwnProperty.call(routes, path)) {
     return routes[path]
   }
   const pathData = {}
-  routes[path]=pathData  
+  routes[path] = pathData
   return pathData
 }
 
@@ -76,23 +74,24 @@ function shouldThrowError (pathData) {
   return false
 }
 
+async function getGCPIdToken (targetAudience) {
+  const auth = new GoogleAuth()
+  const client = await auth.getIdTokenClient(targetAudience)
+  const token = await client.idTokenProvider.fetchIdToken(targetAudience)
+  return token
+}
+
 function processRequest (pathData, req, res) {
   if (shouldThrowError(pathData)) {
     res.status(500).send('Server Error')
   } else if (pathData.proxy) {
-    // res.send('Proxy')
-    const proxyResp = fetch(pathData.proxy)
-    var ok = false
-    const proxyData = proxyResp.then(res => { ok = res.ok; return res.text() })
-    proxyResp.catch(() => res.send('Bad response'))
-    proxyData.then(body => {
-      if (ok) {
-        res.send(`OK => ${body}`)
-      } else {
-        res.send(`BAD => ${body}`)
-      }
-    })
-    proxyData.catch(() => res.send('Bad data'))
+    if (pathData.auth === 'GCP_ID') {
+      // We're proxying to another URL using GCP id token
+      getGCPIdToken(pathData.proxy).then(token => executeProxyRequest(pathData, req, res, { Authorization: `Bearer ${token}` }))
+    } else {
+      // We're proxying to another URL
+      executeProxyRequest(pathData, req, res)
+    }
   } else if (pathData.code === 200) {
     res.send(pathData.text)
   } else if (pathData.code === 302) {
@@ -102,13 +101,28 @@ function processRequest (pathData, req, res) {
   }
 }
 
+function executeProxyRequest (pathData, req, res, headers = {}) {
+  const proxyResp = fetch(pathData.proxy, { headers: headers })
+  var ok = false
+  const proxyData = proxyResp.then(res => { ok = res.ok; return res.text() })
+  proxyResp.catch(() => res.send('Bad response'))
+  proxyData.then(body => {
+    if (ok) {
+      res.send(`OK => ${body}`)
+    } else {
+      res.send(`BAD => ${body}`)
+    }
+  })
+  proxyData.catch(() => res.send('Bad data'))
+}
+
 function processGet (path, req, res) {
   const pathData = routes[path]
   setTimeout(() => processRequest(pathData, req, res), (pathData.delay || 0))
 }
 
 function processPatch (path, req, res) {
-  if (routes.hasOwnProperty(path)) {
+  if (Object.prototype.hasOwnProperty.call(routes, path)) {
     const pathData = routes[path]
     const updatedData = Object.assign(pathData, req.body)
     if (req.accepts('json')) {
@@ -160,6 +174,15 @@ if ('proxy' in argv) {
   })
 }
 
+if ('auth' in argv) {
+  toArray(argv.auth).forEach(value => {
+    const parts = splitArg(value)
+    const pathData = fetchOrCreate(parts[0])
+    pathData.auth = parts[1]
+    console.info(`Auth for route: ${value}`)
+  })
+}
+
 if ('delay' in argv) {
   toArray(argv.delay).forEach(value => {
     const parts = splitArg(value)
@@ -174,13 +197,13 @@ if ('error-rate' in argv) {
     const parts = splitArg(value)
     const pathData = fetchOrCreate(parts[0])
     pathData.errorRate = parts[1]
-    console.info(`Add error rate for route: ${value}`)  
+    console.info(`Add error rate for route: ${value}`)
   })
 }
 
-console.log("Config: %s", JSON.stringify(config, null, 4));
+console.log('Config: %s', JSON.stringify(config, null, 4))
 
-for (const [key, value] of Object.entries(routes)) {
+for (const [key] of Object.entries(routes)) {
   console.info(`Registering route: ${key}`)
   router.get(key, function (req, res) {
     processGet(key, req, res)
