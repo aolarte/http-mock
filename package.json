@@ -1,6 +1,6 @@
 {
   "name": "express_web_test",
-  "version": "1.0.0",
+  "version": "0.0.3",
   "description": "Express Web Test Harness",
   "main": "index.js",
   "dependencies": {

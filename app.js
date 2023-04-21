@@ -12,16 +12,12 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const promMid = require('express-prometheus-middleware')
 const fetch = require('node-fetch')
+const prom_client = require('prom-client')
+const package = require('./package.json');
 
-const client = require('prom-client')
-const counter = new client.Counter({
-  name: 'custom_counter',
-  help: 'Custom Counter Help text'
-})
-counter.inc() // Inc with 1
-counter.inc(10) // Inc with 10
 
-const version = '0.0.2'
+
+const version = package.version
 const tag = process.env.TAG || 'No Tag'
 const port = process.env.PORT || 8080
 
@@ -31,6 +27,14 @@ console.dir(argv)
 
 console.log('Started with env:')
 console.dir(process.env)
+
+
+const version_gauge = new prom_client.Gauge({
+    name: 'http_mock_version',
+    help: 'Server Version',
+    labelNames: ['version'],
+  })
+version_gauge.labels(version).set(1);
 
 const app = express()
 
