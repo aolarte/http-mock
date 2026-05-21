@@ -1,17 +1,19 @@
-if (process.env.SD_TRACE === 'true') {
-  require('@google-cloud/trace-agent').start({
-    serviceContext: {
-      service: process.env.SERVICE_NAME || 'default service',
-      version: process.env.SERVICE_VERSION || 'def'
-    }
-  })
-}
+// TODO add open telementry
+// https://opentelemetry.io/docs/languages/js/libraries/
+// if (process.env.SD_TRACE === 'true') {
+//   require('@google-cloud/trace-agent').start({
+//     serviceContext: {
+//       service: process.env.SERVICE_NAME || 'default service',
+//       version: process.env.SERVICE_VERSION || 'def'
+//     }
+//   })
+// }
 
 const express = require('express')
 const bodyParser = require('body-parser')
-const promMid = require('express-prometheus-middleware')
+//const promMid = require('express-prometheus-middleware')
 const fetch = require('node-fetch')
-const promClient = require('prom-client')
+//const promClient = require('prom-client')
 const pkg = require('./package.json')
 const { GoogleAuth } = require('google-auth-library')
 // const { google } = require('googleapis');
@@ -27,12 +29,12 @@ console.dir(argv)
 console.log('Started with env:')
 console.dir(process.env)
 
-const versionGauge = new promClient.Gauge({
-  name: 'http_mock_version',
-  help: 'Server Version',
-  labelNames: ['version']
-})
-versionGauge.labels(version).set(1)
+// const versionGauge = new promClient.Gauge({
+//   name: 'http_mock_version',
+//   help: 'Server Version',
+//   labelNames: ['version']
+// })
+// versionGauge.labels(version).set(1)
 
 const app = express()
 
@@ -220,11 +222,11 @@ app.use(function (req, res, next) {
   next()
 })
 app.use(bodyParser.json())
-app.use(promMid({
-  metricsPath: '/metrics',
-  collectDefaultMetrics: true,
-  requestDurationBuckets: [0.1, 0.5, 1, 1.5]
-}))
+// app.use(promMid({
+//   metricsPath: '/metrics',
+//   collectDefaultMetrics: true,
+//   requestDurationBuckets: [0.1, 0.5, 1, 1.5]
+// }))
 app.use('/', router)
 app.listen(port, (err) => {
   if (err) {
