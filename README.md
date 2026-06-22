@@ -2,6 +2,13 @@
 
 An easy to configure HTTP server to help mock responses.
 
+## TODO
+
+Missing:
+
+- Prometheus Exporter
+- Open Telementry
+
 ## Setup
 
 Install node modules:
@@ -48,19 +55,21 @@ For Code Qualiaty, `standard` is configured:
 
 ## Docker
 
-### Build image
+### Build Image
 
     docker build -t="http-mock" .
     
-### Run image
+### Run Image
 
     docker run -d -p 8080:8080 --name http-mock http-mock
 
-### Pushing image
+### Build Image and Push Image
 
-    docker images
-    docker tag 7260caa01010 aolarte/http-mock:0.0.1
-    docker push aolarte/http-mock:0.0.1
+    docker logout
+    docker login
+    export VERSION=`cat package.json | jq -r .version`    
+    docker buildx build --platform linux/amd64,linux/arm64  -t=aolarte/http-mock:$VERSION --push .
+
 
 ## Kubernetes
 

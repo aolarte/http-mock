@@ -1,17 +1,17 @@
 {
   "name": "express_web_test",
-  "version": "0.0.4",
+  "version": "0.0.4-rc3",
   "description": "Express Web Test Harness",
   "main": "index.js",
   "dependencies": {
     "body-parser": "^2.2.2",
     "express": "^5.2.1",
     "google-auth-library": "^10.6.2",
+    "node-fetch": "^2.7.0",
     "minimist": "^1.2.8"
   },
   "devDependencies": {
     "mocha": "^11.3.0",
-    "node-fetch": "^2.7.0",
     "standard": "^17.1.2"
   },
   "scripts": {

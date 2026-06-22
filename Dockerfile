@@ -1,4 +1,4 @@
-FROM node:hydrogen
+FROM node:krypton-alpine
 
 # Create app directory
 WORKDIR /usr/src/app
@@ -10,7 +10,7 @@ COPY package*.json ./
 RUN npm ci --only=production
 
 # Bundle app source
-COPY node_modules app.js  .
+COPY app.js  .
 
 EXPOSE 8080
 
