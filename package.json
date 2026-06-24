@@ -1,6 +1,6 @@
 {
   "name": "http_mock",
-  "version": "0.0.4",
+  "version": "0.0.4-rc5",
   "description": "HTTP Mock",
   "main": "index.js",
   "dependencies": {

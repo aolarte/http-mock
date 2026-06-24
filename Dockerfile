@@ -14,4 +14,4 @@ COPY app.js  .
 
 EXPOSE 8080
 
-CMD ["nodejs", "app.js"]
+CMD ["/usr/local/bin/node", "app.js"]

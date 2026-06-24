@@ -57,11 +57,28 @@ For Code Qualiaty, `standard` is configured:
 
 ### Build Image
 
-    docker build -t="http-mock" .
+    docker buildx build --platform linux/amd64,linux/arm64  -t=http-mock --load .
     
 ### Run Image
 
-    docker run -d -p 8080:8080 --name http-mock http-mock
+To run default architecture:
+
+    docker run --rm -d -p 8080:8080 --name http-mock http-mock
+
+To run using QEMU, first install dependencies:
+
+    sudo apt-get update
+    sudo apt-get install -y qemu-user-static binfmt-support
+    docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+
+Run the container:
+    
+    docker run --rm -d -p 8080:8080 --platform linux/arm64 --name http-mock http-mock
+
+To run a shell inside the image to debug:
+
+    docker run --rm -it --platform linux/arm64 http-mock  /bin/sh
+    
 
 ### Build Image and Push Image
 
@@ -92,10 +109,10 @@ spec:
     spec:
       containers:
       - name: mock
-        image: aolarte/http-mock:0.0.2
+        image: aolarte/http-mock:0.0.4
         ports:
         - containerPort: 8080
-        command: ["nodejs"]
+        command: ["/usr/local/bin/node"]
         args: 
         - "app.js"
         - "--text=/:ok_mock"
