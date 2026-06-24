@@ -1,7 +1,7 @@
 {
-  "name": "express_web_test",
-  "version": "0.0.4-rc3",
-  "description": "Express Web Test Harness",
+  "name": "http_mock",
+  "version": "0.0.4",
+  "description": "HTTP Mock",
   "main": "index.js",
   "dependencies": {
     "body-parser": "^2.2.2",

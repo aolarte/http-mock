@@ -10,25 +10,29 @@
 // }
 
 const express = require('express')
+const os = require('os')
 const bodyParser = require('body-parser')
 //const promMid = require('express-prometheus-middleware')
 const fetch = require('node-fetch')
 //const promClient = require('prom-client')
 const pkg = require('./package.json')
 const { GoogleAuth } = require('google-auth-library')
-// const { google } = require('googleapis');
 
 const version = pkg.version
 const tag = process.env.TAG || 'No Tag'
 const port = process.env.PORT || 8080
 
 const argv = require('minimist')(process.argv.slice(2))
+
+console.log('CPU Architecture:', os.arch(), 'OS Version (Kernel):', os.version(), 'OS Release:', os.release());
+
 console.log('Started with parameters:')
 console.dir(argv)
 
 console.log('Started with env:')
 console.dir(process.env)
 
+// TODO Add prom middleware
 // const versionGauge = new promClient.Gauge({
 //   name: 'http_mock_version',
 //   help: 'Server Version',
