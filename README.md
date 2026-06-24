@@ -2,6 +2,13 @@
 
 An easy to configure HTTP server to help mock responses.
 
+## TODO
+
+Missing:
+
+- Prometheus Exporter
+- Open Telementry
+
 ## Setup
 
 Install node modules:
@@ -28,6 +35,7 @@ Or
 * `--error=/fail:bad` Listen on `/fail` and return a 503 error with text `bad`
 * `--delay=/hello:1000` Delay responses to `/hello/` by 1 second.
 * `--error-rate=/hello:30` Return an error (500) 30% of the times `/hello/` is invoked.
+* `--auth=GCP_ID` Use a GCP ID Token when calling proxy target URL. Requires the code to find the GCP credentials. User credentials are not supported, only Metadata Server or GCP Service Account file set via `GOOGLE_APPLICATION_CREDENTIALS` (insecure). 
 
 ## Developing
 
@@ -47,19 +55,38 @@ For Code Qualiaty, `standard` is configured:
 
 ## Docker
 
-### Build image
+### Build Image
 
-    docker build -t="http-mock" .
+    docker buildx build --platform linux/amd64,linux/arm64  -t=http-mock --load .
     
-### Run image
+### Run Image
 
-    docker run -d -p 8080:8080 --name http-mock http-mock
+To run default architecture:
 
-### Pushing image
+    docker run --rm -d -p 8080:8080 --name http-mock http-mock
 
-    docker images
-    docker tag 7260caa01010 aolarte/http-mock:0.0.1
-    docker push aolarte/http-mock:0.0.1
+To run using QEMU, first install dependencies:
+
+    sudo apt-get update
+    sudo apt-get install -y qemu-user-static binfmt-support
+    docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+
+Run the container:
+    
+    docker run --rm -d -p 8080:8080 --platform linux/arm64 --name http-mock http-mock
+
+To run a shell inside the image to debug:
+
+    docker run --rm -it --platform linux/arm64 http-mock  /bin/sh
+    
+
+### Build Image and Push Image
+
+    docker logout
+    docker login
+    export VERSION=`cat package.json | jq -r .version`    
+    docker buildx build --platform linux/amd64,linux/arm64  -t=aolarte/http-mock:$VERSION --push .
+
 
 ## Kubernetes
 
@@ -82,10 +109,10 @@ spec:
     spec:
       containers:
       - name: mock
-        image: aolarte/http-mock:0.0.2
+        image: aolarte/http-mock:0.0.4
         ports:
         - containerPort: 8080
-        command: ["nodejs"]
+        command: ["/usr/local/bin/node"]
         args: 
         - "app.js"
         - "--text=/:ok_mock"
